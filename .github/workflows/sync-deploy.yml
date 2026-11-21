@@ -1,0 +1,23 @@
+name: Sync to deploy repo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Push to deploy repo
+        run: |
+          git config user.name "deploy-bot"
+          git config user.email "bot@noreply.github.com"
+          git remote add deploy https://x-access-token:${{ secrets.DEPLOY_PAT }}@github.com/zwanchen351-tech/zhongsheng.trade.git
+          git rm -rq .github || true
+          git commit -q --amend --allow-empty -m "sync: ${GITHUB_SHA:0:7} from source repo" || true
+          git push deploy HEAD:main --force
